@@ -1,0 +1,31 @@
+{
+  "name": "idb",
+  "version": "0.0.0",
+  "description": "Indexed DB with WebSQL polyfill.",
+  "main": "index.js",
+  "scripts": {
+    "bundle": "browserify test/*.js -o test.js"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "es6-promise": "~0.1.1",
+    "underscore": "~1.5.2"
+  },
+  "devDependencies": {
+    "tape": "~2.3.2",
+    "browserify": "~3.18.0"
+  },
+  "testling": {
+    "files": "test/*.js",
+    "browsers": [
+      "ie/9..latest",
+      "chrome/latest",
+      "firefox/latest",
+      "safari/latest",
+      "opera/latest",
+      "iphone/6..latest",
+      "ipad/6..latest"
+    ]
+  }
+}
