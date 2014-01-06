@@ -6,11 +6,17 @@ var Promise = typeof exports !== 'undefined'
   : window.Promise
 ;
 
-// Underscore
-var _ = typeof exports !== 'undefined'
-  ? require('underscore')
-  : window._
-;
+var keys = function(obj) {
+  var result = [];
+  for (var key in obj) {
+    if (Object.hasOwnProperty.call(obj, key)) result.push(key);
+  }
+  return result;
+};
+
+var isArray = function(obj) {
+  return Object.prototype.toString.call(obj) === '[object Array]';
+};
 
 // Various vendor prefixes.
 var indexedDB =
@@ -34,7 +40,7 @@ DB.drop = function(name) {
   });
 };
 
-_.extend(DB.prototype, {
+DB.prototype = {
 
   open: function() {
     var self = this;
@@ -79,29 +85,29 @@ _.extend(DB.prototype, {
   },
 
   clear: function(names) {
-    if (!names) names = _.keys(this.schema);
-    if (!_.isArray(names)) names = [names];
+    if (!names) names = keys(this.schema);
+    if (!isArray(names)) names = [names];
 
     return this.open().then(function(db) {
       return new Promise(function(resolve, reject) {
-        names = _.filter(names, function(name) {
-          return db.objectStoreNames.contains(name);
-        });
+        for (var i = 0; i < names.length; i++) {
+          if (!db.objectStoreNames.contains(names[i])) names.splice(i--, 1);
+        }
 
         var tx = db.transaction(names, 'readwrite');
 
         tx.oncomplete = function(){ resolve(); };
         tx.onerror = function(e){ reject(e.target.error); };
 
-        _.each(names, function(name) {
-          tx.objectStore(name).clear();
-        });
+        for (var i = 0; i < names.length; i++) {
+          tx.objectStore(names[i]).clear();
+        }
       });
     });
   },
 
   put: function(name, data) {
-    if (!_.isArray(data)) data = [data];
+    if (!isArray(data)) data = [data];
     return this.open().then(function(db) {
       return new Promise(function(resolve, reject) {
         var tx = db.transaction(name, 'readwrite');
@@ -110,7 +116,9 @@ _.extend(DB.prototype, {
         tx.onerror = function(e) { reject(e.target.error); };
 
         var store = tx.objectStore(name);
-        _.each(data, function(item){ store.put(item); });
+        for (var i = 0; i < data.length; i++) {
+          store.put(data[i]);
+        }
       });
     });
   },
@@ -185,7 +193,7 @@ _.extend(DB.prototype, {
     });
   }
 
-});
+};
 
 if (typeof exports !== 'undefined') {
   module.exports = indexedDB ? DB : null;

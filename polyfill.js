@@ -5,10 +5,17 @@ var Promise = typeof exports !== 'undefined'
   : window.Promise
 ;
 
-var _ = typeof exports !== 'undefined'
-  ? require('underscore')
-  : window._
-;
+var keys = function(obj) {
+  var result = [];
+  for (var key in obj) {
+    if (Object.hasOwnProperty.call(obj, key)) result.push(key);
+  }
+  return result;
+};
+
+var isArray = function(obj) {
+  return Object.prototype.toString.call(obj) === '[object Array]';
+};
 
 // http://dev.w3.org/html5/webdatabase
 var DB = function(name, version, schema) {
@@ -37,7 +44,7 @@ DB.drop = function(name) {
   });
 };
 
-_.extend(DB.prototype, {
+DB.prototype = {
 
   open: function() {
     var self = this;
@@ -79,18 +86,18 @@ _.extend(DB.prototype, {
   },
 
   clear: function(names) {
-    if (names == null) names = _.keys(this.schema);
-    if (!_.isArray(names)) names = [names];
-    names = _.filter(names, function(name){
-      return !!this.schema[name];
-    }, this);
+    if (names == null) names = keys(this.schema);
+    if (!isArray(names)) names = [names];
+    for (var i = 0; i < names.length; i++) {
+      if (!this.schema[names[i]]) names.splice(i--, 1);
+    }
 
     return this.open().then(function(db) {
       return new Promise(function(resolve, reject) {
         db.transaction(function(tx) {
-          _.each(names, function(name) {
-            tx.executeSql('delete from ' + name, []);
-          });
+          for (var i = 0; i < names.length; i++) {
+            tx.executeSql('delete from ' + names[i], []);
+          }
         },
         function(e){ reject(e); },
         function(){ resolve(); });
@@ -99,7 +106,7 @@ _.extend(DB.prototype, {
   },
 
   put: function(name, data) {
-    if (!_.isArray(data)) data = [data];
+    if (!isArray(data)) data = [data];
     var store = this.schema[name] || {};
     var keyPath = store.keyPath || 'id';
     var indices = store.indices || {};
@@ -107,7 +114,9 @@ _.extend(DB.prototype, {
     return this.open().then(function(db) {
       return new Promise(function(resolve, reject) {
         db.transaction(function(tx) {
-          _.each(data, function(item) {
+          for (var i = 0; i < data.length; i++) {
+            var item = data[i];
+
             var sql = 'insert or replace into ' + name + ' (id, data';
             for (var index in indices) sql += ', ' + index;
             sql += ') values (?, ?';
@@ -118,7 +127,7 @@ _.extend(DB.prototype, {
             for (var index in indices) args.push(item[index]);
 
             tx.executeSql(sql, args);
-          });
+          }
         },
         function(e) { reject(e); },
         function() { resolve(); });
@@ -154,7 +163,7 @@ _.extend(DB.prototype, {
     if (page != null && per_page == null) per_page = 10;
 
     var store = this.schema[name];
-    var indices = _.keys(store && store.indices || {});
+    var indices = keys(store && store.indices || {});
     var res = {
       results: [],
       total_entries: 0
@@ -174,7 +183,7 @@ _.extend(DB.prototype, {
           sql = 'select data from ' + name + ' order by ';
 
           // order
-          sql += _.contains(indices, order)
+          sql += ~indices.indexOf(order)
             ? order + ' ' + (sort_mode || 'asc')
             : 'id'
           ;
@@ -200,7 +209,7 @@ _.extend(DB.prototype, {
 
   }
 
-});
+};
 
 if (typeof exports !== 'undefined') {
   module.exports = DB;
