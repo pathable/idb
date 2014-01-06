@@ -1,5 +1,5 @@
 var tape = require('tape');
-var DB = require('../') || require('../polyfill');
+var DB = require('../');
 
 var test = function(name, options, callback) {
   if (!callback) {

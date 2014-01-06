@@ -11,7 +11,7 @@ var _ = typeof exports !== 'undefined'
 ;
 
 // http://dev.w3.org/html5/webdatabase
-var DB = module.exports = function(name, version, schema) {
+var DB = function(name, version, schema) {
   this.name = name;
   this.version = version;
   this.schema = schema;
@@ -201,5 +201,11 @@ _.extend(DB.prototype, {
   }
 
 });
+
+if (typeof exports !== 'undefined') {
+  module.exports = DB;
+} else {
+  if (!window.IDB) window.IDB = DB;
+}
 
 }).call(this);
