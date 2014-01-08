@@ -124,15 +124,17 @@ DB.prototype = {
   },
 
   remove: function(name, keys) {
+    if (!isArray(keys)) keys = [keys];
     return this.open().then(function(db) {
       return new Promise(function(resolve, reject) {
-        var req = db.transaction(name, 'readwrite')
-          .objectStore(name)['delete'](keys);
-        req.onsuccess = function() {
-          // Data is often not removed until the next turn of the event loop.
-          setTimeout(function() { resolve(); }, 0);
-        };
-        req.onerror = function(e) { reject(e.target.error); };
+        var tx = db.transaction(name, 'readwrite');
+        var store = tx.objectStore(name);
+
+        for (var i = 0; i < keys.length; i++) store['delete'](keys[i]);
+
+        // Data is often not removed until the next turn of the event loop.
+        tx.oncomplete = function(){ setTimeout(resolve, 0); };
+        tx.onerror = function(e){ reject(e.target.error); };
       });
     });
   },

@@ -309,3 +309,15 @@ test('remove', function(t) {
     });
   });
 });
+
+test('remove multiple', function(t) {
+  var db = new DB('test', 1, {test: {indices: {}}});
+  return db.put('test', [{id: 1, x: 1}, {id: 2, x: 2}]).then(function() {
+    return db.remove('test', [1, 2]).then(function() {
+      return db.query('test').then(function(res) {
+        t.same(res.results, []);
+        return db.close().then(function(){ t.end(); });
+      });
+    });
+  });
+});
