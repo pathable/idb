@@ -1,5 +1,6 @@
 (function() {
 
+// ES6 Promises
 var Promise = typeof exports !== 'undefined'
   ? require('es6-promise').Promise
   : window.Promise
@@ -134,6 +135,22 @@ DB.prototype = {
       });
     });
 
+  },
+
+  remove: function(name, keys) {
+    if (!isArray(keys)) keys = [keys];
+    return this.open().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        db.transaction(function(tx) {
+          var sql = 'delete from ' + name + ' where id in (?';
+          for (var i = 1; i < keys.length; i++) sql += ',?';
+          sql += ')';
+          tx.executeSql(sql, keys);
+        },
+        function(e){ reject(e); },
+        function(){ resolve(); });
+      });
+    });
   },
 
   get: function(name, key) {

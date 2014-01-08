@@ -297,3 +297,15 @@ test('keyPath', function(t) {
     });
   });
 });
+
+test('remove', function(t) {
+  var db = new DB('test', 1, {test: {keyPath: 'x', indices: {x: {}}}});
+  return db.put('test', {x: 3}).then(function() {
+    return db.remove('test', 3).then(function() {
+      return db.get('test', 3).then(function(obj) {
+        t.is(obj, undefined);
+        return db.close().then(function(){ t.end(); });
+      });
+    });
+  });
+});

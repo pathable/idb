@@ -123,6 +123,20 @@ DB.prototype = {
     });
   },
 
+  remove: function(name, keys) {
+    return this.open().then(function(db) {
+      return new Promise(function(resolve, reject) {
+        var req = db.transaction(name, 'readwrite')
+          .objectStore(name)['delete'](keys);
+        req.onsuccess = function() {
+          // Data is often not removed until the next turn of the event loop.
+          setTimeout(function() { resolve(); }, 0);
+        };
+        req.onerror = function(e) { reject(e.target.error); };
+      });
+    });
+  },
+
   get: function(name, key) {
     return this.open().then(function(db) {
       return new Promise(function(resolve, reject) {
