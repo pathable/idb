@@ -18,7 +18,7 @@
   "testling": {
     "files": "test/*.js",
     "browsers": [
-      "ie/9..latest",
+      "ie/10..latest",
       "chrome/latest",
       "firefox/latest",
       "safari/latest",
